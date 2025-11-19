@@ -1,0 +1,67 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  WORKER
+}
+
+enum ExpenseType {
+  COMPANY
+  HOME
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(WORKER)
+  works     Work[]
+  createdAt DateTime @default(now())
+}
+
+model Work {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @default(now())
+  description String
+  quantity    Int
+  wage        Float
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+}
+
+model Material {
+  id           Int      @id @default(autoincrement())
+  name         String
+  supplier     String
+  quantity     Int
+  cost         Float
+  dateReceived DateTime @default(now())
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  quantity  Int
+  startDate DateTime
+  endDate   DateTime?
+  client    String
+  revenue   Float?
+}
+
+model Expense {
+  id       Int         @id @default(autoincrement())
+  type     ExpenseType
+  category String
+  amount   Float
+  date     DateTime    @default(now())
+  note     String?
+}
