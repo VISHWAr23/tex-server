@@ -9,4 +9,13 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('health')
+  healthCheck() {
+    return {
+      status: 'ok',
+      message: 'StitchHub API is running',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }

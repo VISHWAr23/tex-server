@@ -5,5 +5,4 @@ test
 coverage
 .git
 *.md
-src
 prisma/migrations
