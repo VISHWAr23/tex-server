@@ -1,27 +1,26 @@
-import { IsInt, IsNumber, IsString, IsDateString, Min, IsPositive, IsOptional } from 'class-validator';
+import { IsInt, IsNumber, IsString, IsOptional, IsPositive } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 /**
- * DTO for creating a new work entry
- * Date format follows ISO 8601 standard (YYYY-MM-DD)
+ * DTO for updating an existing work entry
  */
-export class CreateWorkDto {
-  @IsDateString({}, { message: 'Date must be in ISO 8601 format (YYYY-MM-DD)' })
-  date: string;
-
+export class UpdateWorkDto {
+  @IsOptional()
   @Type(() => Number)
   @IsInt({ message: 'Quantity must be an integer' })
   @IsPositive({ message: 'Quantity must be positive' })
-  quantity: number;
+  quantity?: number;
 
+  @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: 'Price per unit must be a number' })
   @IsPositive({ message: 'Price per unit must be positive' })
-  pricePerUnit: number;
+  pricePerUnit?: number;
 
-  @IsString({ message: 'Description is required' })
+  @IsOptional()
+  @IsString({ message: 'Description must be a string' })
   @Transform(({ value }) => value?.trim())
-  description: string;
+  description?: string;
 
   @IsOptional()
   @Type(() => Number)
