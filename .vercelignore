@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.local
+test
+coverage
+.git
+*.md
+src
+prisma/migrations

@@ -27,4 +27,9 @@ export class CreateWorkDto {
   @Type(() => Number)
   @IsInt()
   descriptionId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'User ID must be an integer' })
+  userId?: number;
 }

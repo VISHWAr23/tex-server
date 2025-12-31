@@ -1,12 +1,34 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import {
+  PrismaExceptionFilter,
+  PrismaValidationExceptionFilter,
+  AllExceptionsFilter,
+} from './common/filters/prisma-exception.filter';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import * as express from 'express';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+// Create Express instance
+const expressApp = express();
 
-  // 1. Add validation pipe for DTOs
-  app.useGlobalPipes(
+// Export the Express app for Vercel
+export const app = expressApp;
+
+// Factory function to create and configure NestJS app
+async function createNestApp() {
+  const adapter = new ExpressAdapter(expressApp);
+  const nestApp = await NestFactory.create(AppModule, adapter);
+
+  // 1. Add global exception filters (order matters - most specific first)
+  nestApp.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new PrismaValidationExceptionFilter(),
+    new PrismaExceptionFilter(),
+  );
+
+  // 2. Add validation pipe for DTOs
+  nestApp.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
@@ -14,17 +36,31 @@ async function bootstrap() {
     }),
   );
 
-  // 2. Add this line to match your React Axios baseURL
-  app.setGlobalPrefix('api');
+  // 3. Add this line to match your React Axios baseURL
+  nestApp.setGlobalPrefix('api');
 
-  // 3. Ensure CORS is enabled
-  app.enableCors({
+  // 4. Ensure CORS is enabled
+  nestApp.enableCors({
     origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
-  await app.listen(3000);
+  await nestApp.init();
+  return nestApp;
+}
+
+// For local development
+async function bootstrap() {
+  const nestApp = await createNestApp();
+  await nestApp.listen(3000);
   console.log('Server running on http://localhost:3000/api');
 }
-bootstrap();
+
+// Initialize app for Vercel serverless
+createNestApp();
+
+// Only run bootstrap if not in serverless environment
+if (require.main === module) {
+  bootstrap();
+}

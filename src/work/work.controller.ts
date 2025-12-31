@@ -43,9 +43,10 @@ export class WorkController {
 
   /**
    * POST /api/work/descriptions
-   * Create a new work description
+   * Create a new work description (OWNER only)
    */
   @Post('descriptions')
+  @Roles('OWNER')
   async createDescription(@Body() dto: CreateDescriptionDto) {
     return this.workService.createDescription(dto);
   }
@@ -54,11 +55,12 @@ export class WorkController {
 
   /**
    * POST /api/work
-   * Create a new work entry for the logged-in user
+   * Create a new work entry (OWNER only)
    */
   @Post()
+  @Roles('OWNER')
   async createWork(@Request() req, @Body() dto: CreateWorkDto) {
-    return this.workService.createWork(req.user.sub, dto);
+    return this.workService.createWork(dto.userId || req.user.sub, dto);
   }
 
   /**
@@ -128,9 +130,10 @@ export class WorkController {
 
   /**
    * PUT /api/work/:id
-   * Update work record
+   * Update work record (OWNER only)
    */
   @Put(':id')
+  @Roles('OWNER')
   async updateWork(
     @Request() req,
     @Param('id', ParseIntPipe) id: number,
@@ -141,9 +144,10 @@ export class WorkController {
 
   /**
    * DELETE /api/work/:id
-   * Delete work record
+   * Delete work record (OWNER only)
    */
   @Delete(':id')
+  @Roles('OWNER')
   async deleteWork(@Request() req, @Param('id', ParseIntPipe) id: number) {
     return this.workService.deleteWork(id, req.user.sub, req.user.role);
   }
