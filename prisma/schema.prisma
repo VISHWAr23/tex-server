@@ -26,14 +26,16 @@ enum ExpenseType {
 }
 
 model User {
-  id        Int         @id @default(autoincrement())
-  email     String      @unique
-  password  String
-  name      String
-  role      Role        @default(WORKER)
-  works     Work[]
-  attendance Attendance[]
-  createdAt DateTime    @default(now())
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  password        String
+  name            String
+  role            Role             @default(WORKER)
+  monthlySalary   Float?           // Monthly salary for workers
+  works           Work[]
+  attendance      Attendance[]
+  salaryPayments  SalaryPayment[]
+  createdAt       DateTime         @default(now())
 }
 
 model Attendance {
@@ -52,10 +54,39 @@ model Attendance {
   @@index([date])
 }
 
+model Company {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  exports     Export[]
+  createdAt   DateTime @default(now())
+
+  @@index([name])
+}
+
+model Export {
+  id                   Int               @id @default(autoincrement())
+  date                 DateTime          // Export date (normalized to start of day)
+  company              Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  companyId            Int
+  quantity             Int               // Units exported
+  pricePerUnit         Float             // Price per unit
+  totalAmount          Float             // quantity * pricePerUnit
+  description          WorkDescription   @relation(fields: [descriptionId], references: [id], onDelete: Restrict)
+  descriptionId        Int
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@index([companyId])
+  @@index([date])
+  @@index([date, companyId])
+}
+
 model WorkDescription {
-  id    Int    @id @default(autoincrement())
-  text  String @unique
-  works Work[]
+  id           Int      @id @default(autoincrement())
+  text         String   @unique
+  pricePerUnit Float?   // Optional default price per unit
+  works        Work[]
+  exports      Export[]
 
   @@index([text])
 }
@@ -74,9 +105,9 @@ model Work {
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
-  @@unique([date, userId]) // One entry per user per day
   @@index([userId])
   @@index([date])
+  @@index([date, userId])
 }
 
 model Material {
@@ -105,4 +136,17 @@ model Expense {
   amount   Float
   date     DateTime    @default(now())
   note     String?
+}
+
+model SalaryPayment {
+  id        Int      @id @default(autoincrement())
+  amount    Float    // Amount paid
+  date      DateTime @default(now())
+  note      String?  // Optional note about the payment
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([date])
 }

@@ -89,26 +89,11 @@ export class WorkService {
 
   /**
    * Create a new work entry for a user
-   * Automatically creates attendance record for the day
+   * Allows multiple work entries per user per day
+   * Automatically creates/updates attendance record for the day
    */
   async createWork(userId: number, dto: CreateWorkDto) {
     const normalizedDate = this.normalizeDate(dto.date);
-
-    // Check if work already exists for this user and date
-    const existingWork = await this.prisma.work.findUnique({
-      where: {
-        date_userId: {
-          date: normalizedDate,
-          userId,
-        },
-      },
-    });
-
-    if (existingWork) {
-      throw new ConflictException(
-        `Work entry already exists for ${dto.date}. Use update instead.`,
-      );
-    }
 
     // Get or create description
     let descriptionId = dto.descriptionId;
@@ -126,7 +111,7 @@ export class WorkService {
 
     // Create work and attendance in a transaction
     return this.prisma.$transaction(async (tx) => {
-      // Create work entry
+      // Create work entry (multiple entries per day allowed)
       const work = await tx.work.create({
         data: {
           date: normalizedDate,
@@ -159,12 +144,11 @@ export class WorkService {
       });
 
       if (existingAttendance) {
-        // Update existing attendance to link with work
+        // Update existing attendance to mark as present
         await tx.attendance.update({
           where: { id: existingAttendance.id },
           data: {
             status: 'PRESENT',
-            workId: work.id,
           },
         });
       } else {
@@ -215,25 +199,27 @@ export class WorkService {
   }
 
   /**
-   * Get work for a specific user and date
+   * Get work entries for a specific user and date
+   * Returns array since multiple entries per day are now allowed
    */
   async getWorkByUserAndDate(userId: number, date: string) {
     const normalizedDate = this.normalizeDate(date);
 
-    const work = await this.prisma.work.findUnique({
+    const works = await this.prisma.work.findMany({
       where: {
-        date_userId: {
-          date: normalizedDate,
-          userId,
-        },
+        date: normalizedDate,
+        userId,
       },
       include: {
         description: true,
         attendance: true,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
-    return work;
+    return works;
   }
 
   /**

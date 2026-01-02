@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
@@ -22,6 +23,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { CreateSalaryPaymentDto } from './dto/salary-payment.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -135,5 +137,57 @@ export class UsersController {
   @Roles(Role.OWNER)
   async delete(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.delete(id);
+  }
+
+  /**
+   * Get worker details with salary information
+   * GET /api/users/:id/details
+   */
+  @Get(':id/details')
+  @Roles(Role.OWNER)
+  async getWorkerDetails(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('month') month?: string,
+  ) {
+    return this.usersService.getWorkerDetails(id, month);
+  }
+
+  /**
+   * Create salary payment for a worker
+   * POST /api/users/:id/salary-payments
+   */
+  @Post(':id/salary-payments')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.OWNER)
+  async createSalaryPayment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateSalaryPaymentDto,
+  ) {
+    return this.usersService.createSalaryPayment(id, dto);
+  }
+
+  /**
+   * Get salary payments for a worker
+   * GET /api/users/:id/salary-payments
+   */
+  @Get(':id/salary-payments')
+  @Roles(Role.OWNER)
+  async getSalaryPayments(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.usersService.getSalaryPayments(id, startDate, endDate);
+  }
+
+  /**
+   * Delete salary payment
+   * DELETE /api/users/salary-payments/:paymentId
+   */
+  @Delete('salary-payments/:paymentId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.OWNER)
+  async deleteSalaryPayment(@Param('paymentId', ParseIntPipe) paymentId: number) {
+    return this.usersService.deleteSalaryPayment(paymentId);
   }
 }

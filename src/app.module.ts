@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { WorkModule } from './work/work.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { ExportsModule } from './exports/exports.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AttendanceModule } from './attendance/attendance.module';
     FinanceModule,
     WorkModule,
     AttendanceModule,
+    ExportsModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

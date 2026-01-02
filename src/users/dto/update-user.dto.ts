@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsEnum, MinLength, MaxLength, IsOptional } from 'class-validator';
+import { IsEmail, IsString, IsEnum, MinLength, MaxLength, IsOptional, IsNumber, Min } from 'class-validator';
 import { Role } from '@prisma/client';
 
 export class UpdateUserDto {
@@ -15,4 +15,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(Role, { message: 'Role must be either OWNER or WORKER' })
   role?: Role;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Monthly salary must be a number' })
+  @Min(0, { message: 'Monthly salary cannot be negative' })
+  monthlySalary?: number;
 }
