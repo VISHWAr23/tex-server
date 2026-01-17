@@ -51,6 +51,19 @@ export class WorkController {
     return this.workService.createDescription(dto);
   }
 
+  /**
+   * PUT /api/work/descriptions/:id
+   * Update work description price (OWNER only)
+   */
+  @Put('descriptions/:id')
+  @Roles('OWNER')
+  async updateDescription(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateDescriptionDto,
+  ) {
+    return this.workService.updateDescription(id, dto);
+  }
+
   // ==================== WORK RECORDS ====================
 
   /**

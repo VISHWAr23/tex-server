@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsString, IsDateString, Min, IsPositive, IsOptional } from 'class-validator';
+import { IsInt, IsNumber, IsString, IsDateString, Min, IsPositive, IsOptional, IsBoolean } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 /**
@@ -32,4 +32,8 @@ export class CreateWorkDto {
   @Type(() => Number)
   @IsInt({ message: 'User ID must be an integer' })
   userId?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  updateDescriptionPrice?: boolean; // If true, update WorkDescription pricePerUnit
 }

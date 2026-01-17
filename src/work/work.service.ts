@@ -32,6 +32,7 @@ export class WorkService {
       select: {
         id: true,
         text: true,
+        pricePerUnit: true,
         _count: {
           select: { works: true },
         },
@@ -41,7 +42,7 @@ export class WorkService {
 
   /**
    * Create a new work description
-   * If description already exists, return the existing one
+   * If description already exists, return the existing one (or update price if provided)
    */
   async createDescription(dto: CreateDescriptionDto) {
     const existing = await this.prisma.workDescription.findUnique({
@@ -49,11 +50,50 @@ export class WorkService {
     });
 
     if (existing) {
+      // If a price is provided and different, update it
+      if (dto.pricePerUnit !== undefined && dto.pricePerUnit !== existing.pricePerUnit) {
+        return this.prisma.workDescription.update({
+          where: { id: existing.id },
+          data: { pricePerUnit: dto.pricePerUnit },
+        });
+      }
       return existing;
     }
 
     return this.prisma.workDescription.create({
-      data: { text: dto.text },
+      data: { 
+        text: dto.text,
+        pricePerUnit: dto.pricePerUnit,
+      },
+    });
+  }
+
+  /**
+   * Update work description (specifically price)
+   */
+  async updateDescription(id: number, dto: CreateDescriptionDto) {
+    const existing = await this.prisma.workDescription.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Description with ID ${id} not found`);
+    }
+
+    return this.prisma.workDescription.update({
+      where: { id },
+      data: {
+        text: dto.text || existing.text,
+        pricePerUnit: dto.pricePerUnit !== undefined ? dto.pricePerUnit : existing.pricePerUnit,
+      },
+      select: {
+        id: true,
+        text: true,
+        pricePerUnit: true,
+        _count: {
+          select: { works: true },
+        },
+      },
     });
   }
 
@@ -104,6 +144,14 @@ export class WorkService {
 
     if (!descriptionId) {
       throw new BadRequestException('Description is required');
+    }
+
+    // Update description price if requested and price is provided
+    if (dto.updateDescriptionPrice && descriptionId && dto.pricePerUnit) {
+      await this.prisma.workDescription.update({
+        where: { id: descriptionId },
+        data: { pricePerUnit: dto.pricePerUnit },
+      });
     }
 
     // Calculate total amount
@@ -318,6 +366,14 @@ export class WorkService {
     const quantity = dto.quantity ?? work.quantity;
     const pricePerUnit = dto.pricePerUnit ?? work.pricePerUnit;
     const totalAmount = quantity * pricePerUnit;
+
+    // Update description price if requested
+    if (dto.updateDescriptionPrice && descriptionId && dto.pricePerUnit) {
+      await this.prisma.workDescription.update({
+        where: { id: descriptionId },
+        data: { pricePerUnit: dto.pricePerUnit },
+      });
+    }
 
     const updateData: any = {
       quantity,

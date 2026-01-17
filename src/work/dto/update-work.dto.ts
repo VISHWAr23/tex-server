@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsString, IsOptional, IsPositive } from 'class-validator';
+import { IsInt, IsNumber, IsString, IsOptional, IsPositive, IsBoolean } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 /**
@@ -26,4 +26,8 @@ export class UpdateWorkDto {
   @Type(() => Number)
   @IsInt()
   descriptionId?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  updateDescriptionPrice?: boolean; // If true, update WorkDescription pricePerUnit
 }

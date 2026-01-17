@@ -49,6 +49,24 @@ export class ExportsController {
   // ==================== EXPORT RECORDS ====================
 
   /**
+   * GET /api/exports/statistics
+   * Get export statistics
+   */
+  @Get('statistics')
+  async getStatistics(@Query() query: ExportQueryDto) {
+    return this.exportsService.getStatistics(query);
+  }
+
+  /**
+   * GET /api/exports/companies
+   * Get unique company names
+   */
+  @Get('companies')
+  async getCompanies() {
+    return this.exportsService.getCompanies();
+  }
+
+  /**
    * POST /api/exports
    * Create a new export entry
    */
@@ -65,24 +83,6 @@ export class ExportsController {
   @Get()
   async getAllExports(@Query() query: ExportQueryDto) {
     return this.exportsService.getAllExports(query);
-  }
-
-  /**
-   * GET /api/exports/statistics
-   * Get export statistics
-   */
-  @Get('statistics')
-  async getStatistics(@Query() query: ExportQueryDto) {
-    return this.exportsService.getStatistics(query);
-  }
-
-  /**
-   * GET /api/exports/companies
-   * Get unique company names
-   */
-  @Get('companies')
-  async getCompanies() {
-    return this.exportsService.getCompanies();
   }
 
   /**

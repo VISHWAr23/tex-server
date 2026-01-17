@@ -141,6 +141,7 @@ export class ExportsService {
     const totalAmount = dto.quantity * dto.pricePerUnit;
 
     // Create export entry
+    // Note: paymentReceived column doesn't exist in database yet
     const exportEntry = await this.prisma.export.create({
       data: {
         date: normalizedDate,
@@ -163,51 +164,60 @@ export class ExportsService {
    * Get all exports with optional filters
    */
   async getAllExports(query: ExportQueryDto) {
-    const where: any = {};
+    try {
+      const where: any = {};
 
-    if (query.companyName) {
-      where.company = {
-        name: {
-          contains: query.companyName,
-          mode: 'insensitive',
-        },
-      };
-    }
-
-    if (query.startDate || query.endDate) {
-      where.date = {};
-      if (query.startDate) {
-        where.date.gte = this.normalizeDate(query.startDate);
+      if (query.companyName) {
+        where.company = {
+          name: {
+            contains: query.companyName,
+            mode: 'insensitive',
+          },
+        };
       }
-      if (query.endDate) {
-        const endDate = this.normalizeDate(query.endDate);
-        endDate.setHours(23, 59, 59, 999);
-        where.date.lte = endDate;
+
+      if (query.startDate || query.endDate) {
+        where.date = {};
+        if (query.startDate) {
+          where.date.gte = this.normalizeDate(query.startDate);
+        }
+        if (query.endDate) {
+          const endDate = this.normalizeDate(query.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          where.date.lte = endDate;
+        }
       }
-    }
 
-    if (query.description) {
-      where.description = {
-        text: {
-          contains: query.description,
-          mode: 'insensitive',
+      if (query.description) {
+        where.description = {
+          text: {
+            contains: query.description,
+            mode: 'insensitive',
+          },
+        };
+      }
+
+      // Note: paymentReceived column doesn't exist in database yet
+      // This will be handled after database migration
+      // For now, we skip the paymentReceived filter
+
+      const exports = await this.prisma.export.findMany({
+        where,
+        include: {
+          description: true,
+          company: true,
         },
-      };
+        orderBy: [
+          { date: 'desc' },
+          { createdAt: 'desc' },
+        ],
+      });
+
+      return exports;
+    } catch (error) {
+      console.error('Error in getAllExports:', error);
+      throw error;
     }
-
-    const exports = await this.prisma.export.findMany({
-      where,
-      include: {
-        description: true,
-        company: true,
-      },
-      orderBy: [
-        { date: 'desc' },
-        { createdAt: 'desc' },
-      ],
-    });
-
-    return exports;
   }
 
   /**
@@ -304,58 +314,62 @@ export class ExportsService {
    * Get export statistics
    */
   async getStatistics(query: ExportQueryDto) {
-    const where: any = {};
+    try {
+      let where: any = {};
 
-    if (query.companyName) {
-      where.company = {
-        name: {
-          contains: query.companyName,
-          mode: 'insensitive',
-        },
-      };
-    }
-
-    if (query.startDate || query.endDate) {
-      where.date = {};
-      if (query.startDate) {
-        where.date.gte = this.normalizeDate(query.startDate);
+      if (query.companyName) {
+        where.company = {
+          name: {
+            contains: query.companyName,
+            mode: 'insensitive',
+          },
+        };
       }
-      if (query.endDate) {
-        const endDate = this.normalizeDate(query.endDate);
-        endDate.setHours(23, 59, 59, 999);
-        where.date.lte = endDate;
+
+      if (query.startDate || query.endDate) {
+        where.date = {};
+        if (query.startDate) {
+          where.date.gte = this.normalizeDate(query.startDate);
+        }
+        if (query.endDate) {
+          const endDate = this.normalizeDate(query.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          where.date.lte = endDate;
+        }
       }
-    }
 
-    // Get aggregate statistics
-    const aggregate = await this.prisma.export.aggregate({
-      where,
-      _sum: {
-        totalAmount: true,
-        quantity: true,
-      },
-      _count: { id: true },
-      _avg: {
-        totalAmount: true,
-        pricePerUnit: true,
-      },
-    });
+      // Note: paymentReceived column doesn't exist in database yet
+      // Payment filtering will be added after database migration
 
-    // Get by company
-    const byCompany = await this.prisma.export.groupBy({
-      by: ['companyId'],
-      where,
-      _sum: {
-        totalAmount: true,
-        quantity: true,
-      },
-      _count: { id: true },
-      orderBy: {
+      // Get aggregate statistics
+      const aggregate = await this.prisma.export.aggregate({
+        where,
         _sum: {
-          totalAmount: 'desc',
+          totalAmount: true,
+          quantity: true,
         },
-      },
-    });
+        _count: { id: true },
+        _avg: {
+          totalAmount: true,
+          pricePerUnit: true,
+        },
+      });
+
+      // Get by company
+      const byCompany = await this.prisma.export.groupBy({
+        by: ['companyId'],
+        where,
+        _sum: {
+          totalAmount: true,
+          quantity: true,
+        },
+        _count: { id: true },
+        orderBy: {
+          _sum: {
+            totalAmount: 'desc',
+          },
+        },
+      });
 
     // Get company details
     const companies = await this.prisma.company.findMany({
@@ -416,5 +430,9 @@ export class ExportsService {
         count: d._count.id || 0,
       })),
     };
+    } catch (error) {
+      console.error('Error in getStatistics:', error);
+      throw error;
+    }
   }
 }

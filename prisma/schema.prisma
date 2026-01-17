@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,73 +7,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  OWNER
-  WORKER
-}
-
-enum AttendanceStatus {
-  PRESENT
-  ABSENT
-  HALF_DAY
-  LEAVE
-}
-
-enum ExpenseType {
-  COMPANY
-  HOME
-}
-
 model User {
-  id              Int              @id @default(autoincrement())
-  email           String           @unique
-  password        String
-  name            String
-  role            Role             @default(WORKER)
-  monthlySalary   Float?           // Monthly salary for workers
-  works           Work[]
-  attendance      Attendance[]
-  salaryPayments  SalaryPayment[]
-  createdAt       DateTime         @default(now())
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  password       String
+  name           String
+  role           Role            @default(WORKER)
+  createdAt      DateTime        @default(now())
+  monthlySalary  Float?
+  attendance     Attendance[]
+  salaryPayments SalaryPayment[]
+  works          Work[]
 }
 
 model Attendance {
-  id        Int               @id @default(autoincrement())
-  date      DateTime          // Normalized to start of day
-  status    AttendanceStatus  @default(PRESENT) // Auto-set based on work records
-  work      Work?             @relation(fields: [workId], references: [id], onDelete: SetNull)
-  workId    Int?              @unique
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        Int              @id @default(autoincrement())
+  date      DateTime
+  status    AttendanceStatus @default(PRESENT)
+  workId    Int?             @unique
   userId    Int
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work      Work?            @relation(fields: [workId], references: [id])
 
-  @@unique([date, userId]) // One attendance record per user per day
+  @@unique([date, userId])
   @@index([userId])
   @@index([date])
 }
 
 model Company {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  exports     Export[]
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  exports   Export[]
 
   @@index([name])
 }
 
 model Export {
-  id                   Int               @id @default(autoincrement())
-  date                 DateTime          // Export date (normalized to start of day)
-  company              Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  companyId            Int
-  quantity             Int               // Units exported
-  pricePerUnit         Float             // Price per unit
-  totalAmount          Float             // quantity * pricePerUnit
-  description          WorkDescription   @relation(fields: [descriptionId], references: [id], onDelete: Restrict)
-  descriptionId        Int
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  id            Int             @id @default(autoincrement())
+  date          DateTime
+  quantity      Int
+  pricePerUnit  Float
+  totalAmount   Float
+  descriptionId Int
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  companyId     Int
+  company       Company         @relation(fields: [companyId], references: [id])
+  description   WorkDescription @relation(fields: [descriptionId], references: [id])
 
   @@index([companyId])
   @@index([date])
@@ -84,26 +66,26 @@ model Export {
 model WorkDescription {
   id           Int      @id @default(autoincrement())
   text         String   @unique
-  pricePerUnit Float?   // Optional default price per unit
-  works        Work[]
+  pricePerUnit Float?
   exports      Export[]
+  works        Work[]
 
   @@index([text])
 }
 
 model Work {
-  id                   Int               @id @default(autoincrement())
-  date                 DateTime          // Stored as date only (normalized to start of day)
-  quantity             Int               // Units produced/completed
-  pricePerUnit         Float             // Price per unit of work
-  totalAmount          Float             // quantity * pricePerUnit
-  description          WorkDescription   @relation(fields: [descriptionId], references: [id], onDelete: Restrict)
-  descriptionId        Int
-  user                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId               Int
-  attendance           Attendance?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  id            Int             @id @default(autoincrement())
+  date          DateTime
+  quantity      Int
+  userId        Int
+  createdAt     DateTime        @default(now())
+  descriptionId Int
+  pricePerUnit  Float
+  totalAmount   Float
+  updatedAt     DateTime        @updatedAt
+  attendance    Attendance?
+  description   WorkDescription @relation(fields: [descriptionId], references: [id])
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([date])
@@ -120,7 +102,7 @@ model Material {
 }
 
 model Product {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
   quantity  Int
   startDate DateTime
@@ -140,13 +122,30 @@ model Expense {
 
 model SalaryPayment {
   id        Int      @id @default(autoincrement())
-  amount    Float    // Amount paid
+  amount    Float
   date      DateTime @default(now())
-  note      String?  // Optional note about the payment
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note      String?
   userId    Int
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([date])
+}
+
+enum Role {
+  OWNER
+  WORKER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+}
+
+enum ExpenseType {
+  COMPANY
+  HOME
 }
