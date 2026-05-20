@@ -46,17 +46,18 @@ model Company {
 }
 
 model Export {
-  id            Int             @id @default(autoincrement())
-  date          DateTime
-  quantity      Int
-  pricePerUnit  Float
-  totalAmount   Float
-  descriptionId Int
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  companyId     Int
-  company       Company         @relation(fields: [companyId], references: [id])
-  description   WorkDescription @relation(fields: [descriptionId], references: [id])
+  id              Int             @id @default(autoincrement())
+  date            DateTime
+  quantity        Int
+  pricePerUnit    Float
+  totalAmount     Float
+  paymentReceived Boolean         @default(false)
+  descriptionId   Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  companyId       Int
+  company         Company         @relation(fields: [companyId], references: [id])
+  description     WorkDescription @relation(fields: [descriptionId], references: [id])
 
   @@index([companyId])
   @@index([date])
@@ -148,4 +149,5 @@ enum AttendanceStatus {
 enum ExpenseType {
   COMPANY
   HOME
+  HOME_INCOME
 }

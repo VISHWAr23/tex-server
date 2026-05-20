@@ -141,7 +141,6 @@ export class ExportsService {
     const totalAmount = dto.quantity * dto.pricePerUnit;
 
     // Create export entry
-    // Note: paymentReceived column doesn't exist in database yet
     const exportEntry = await this.prisma.export.create({
       data: {
         date: normalizedDate,
@@ -150,6 +149,7 @@ export class ExportsService {
         pricePerUnit: dto.pricePerUnit,
         totalAmount,
         descriptionId,
+        paymentReceived: dto.paymentReceived ?? false,
       },
       include: {
         description: true,
@@ -197,9 +197,6 @@ export class ExportsService {
         };
       }
 
-      // Note: paymentReceived column doesn't exist in database yet
-      // This will be handled after database migration
-      // For now, we skip the paymentReceived filter
 
       const exports = await this.prisma.export.findMany({
         where,
@@ -284,6 +281,11 @@ export class ExportsService {
       const quantity = dto.quantity ?? existing.quantity;
       const pricePerUnit = dto.pricePerUnit ?? existing.pricePerUnit;
       data.totalAmount = quantity * pricePerUnit;
+    }
+
+    // Handle payment status
+    if (dto.paymentReceived !== undefined) {
+      data.paymentReceived = dto.paymentReceived;
     }
 
     return this.prisma.export.update({

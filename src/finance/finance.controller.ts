@@ -110,6 +110,46 @@ export class FinanceController {
     return this.financeService.getCategories(ExpenseType.HOME);
   }
 
+  // ==================== HOME INCOME ====================
+
+  /**
+   * POST /api/finance/home-income
+   * Create a home income entry
+   */
+  @Post('home-income')
+  @HttpCode(HttpStatus.CREATED)
+  async createHomeIncome(@Body() dto: CreateExpenseDto) {
+    dto.type = ExpenseType.HOME_INCOME;
+    return this.financeService.create(dto);
+  }
+
+  /**
+   * GET /api/finance/home-income
+   * Get all home income entries
+   */
+  @Get('home-income')
+  async getHomeIncomes(@Query() query: ExpenseQueryDto) {
+    return this.financeService.findAll(query, ExpenseType.HOME_INCOME);
+  }
+
+  /**
+   * GET /api/finance/home-income/statistics
+   * Get home income statistics
+   */
+  @Get('home-income/statistics')
+  async getHomeIncomeStatistics(@Query() query: ExpenseQueryDto) {
+    return this.financeService.getStatistics(query, ExpenseType.HOME_INCOME);
+  }
+
+  /**
+   * GET /api/finance/home-income/categories
+   * Get home income categories
+   */
+  @Get('home-income/categories')
+  async getHomeIncomeCategories() {
+    return this.financeService.getCategories(ExpenseType.HOME_INCOME);
+  }
+
   // ==================== GENERAL ENDPOINTS ====================
 
   /**

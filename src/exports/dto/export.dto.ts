@@ -30,6 +30,10 @@ export class CreateExportDto {
   @IsOptional()
   @IsBoolean()
   updateDescriptionPrice?: boolean; // If true, update WorkDescription pricePerUnit
+
+  @IsOptional()
+  @IsBoolean()
+  paymentReceived?: boolean;
 }
 
 /**
@@ -66,6 +70,10 @@ export class UpdateExportDto {
   @IsOptional()
   @IsBoolean()
   updateDescriptionPrice?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  paymentReceived?: boolean;
 }
 
 /**
