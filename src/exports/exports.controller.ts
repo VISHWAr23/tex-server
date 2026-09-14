@@ -20,6 +20,8 @@ import {
   CreateExportDto,
   UpdateExportDto,
   ExportQueryDto,
+  CreateCompanyDto,
+  UpdateCompanyDto,
 } from './dto/export.dto';
 import { ExportsService } from './exports.service';
 
@@ -64,6 +66,37 @@ export class ExportsController {
   @Get('companies')
   async getCompanies() {
     return this.exportsService.getCompanies();
+  }
+
+  /**
+   * POST /api/exports/companies
+   * Create a new company
+   */
+  @Post('companies')
+  @HttpCode(HttpStatus.CREATED)
+  async createCompany(@Body() dto: CreateCompanyDto) {
+    return this.exportsService.createCompany(dto);
+  }
+
+  /**
+   * PUT /api/exports/companies/:id
+   * Update a company
+   */
+  @Put('companies/:id')
+  async updateCompany(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCompanyDto,
+  ) {
+    return this.exportsService.updateCompany(id, dto);
+  }
+
+  /**
+   * DELETE /api/exports/companies/:id
+   * Delete a company
+   */
+  @Delete('companies/:id')
+  async deleteCompany(@Param('id', ParseIntPipe) id: number) {
+    return this.exportsService.deleteCompany(id);
   }
 
   /**

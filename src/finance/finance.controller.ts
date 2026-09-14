@@ -16,6 +16,7 @@ import { FinanceService } from './finance.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { Role, ExpenseType } from '@prisma/client';
 import { CreateExpenseDto, UpdateExpenseDto, ExpenseQueryDto } from './dto/expense.dto';
 
@@ -76,6 +77,7 @@ export class FinanceController {
    * POST /api/finance/home
    * Create a home expense
    */
+  @Public()
   @Post('home')
   @HttpCode(HttpStatus.CREATED)
   async createHomeExpense(@Body() dto: CreateExpenseDto) {
@@ -87,6 +89,7 @@ export class FinanceController {
    * GET /api/finance/home
    * Get all home expenses
    */
+  @Public()
   @Get('home')
   async getHomeExpenses(@Query() query: ExpenseQueryDto) {
     return this.financeService.findAll(query, ExpenseType.HOME);
@@ -96,6 +99,7 @@ export class FinanceController {
    * GET /api/finance/home/statistics
    * Get home expense statistics
    */
+  @Public()
   @Get('home/statistics')
   async getHomeStatistics(@Query() query: ExpenseQueryDto) {
     return this.financeService.getStatistics(query, ExpenseType.HOME);
@@ -105,6 +109,7 @@ export class FinanceController {
    * GET /api/finance/home/categories
    * Get home expense categories
    */
+  @Public()
   @Get('home/categories')
   async getHomeCategories() {
     return this.financeService.getCategories(ExpenseType.HOME);
@@ -116,6 +121,7 @@ export class FinanceController {
    * POST /api/finance/home-income
    * Create a home income entry
    */
+  @Public()
   @Post('home-income')
   @HttpCode(HttpStatus.CREATED)
   async createHomeIncome(@Body() dto: CreateExpenseDto) {
@@ -127,6 +133,7 @@ export class FinanceController {
    * GET /api/finance/home-income
    * Get all home income entries
    */
+  @Public()
   @Get('home-income')
   async getHomeIncomes(@Query() query: ExpenseQueryDto) {
     return this.financeService.findAll(query, ExpenseType.HOME_INCOME);
@@ -136,6 +143,7 @@ export class FinanceController {
    * GET /api/finance/home-income/statistics
    * Get home income statistics
    */
+  @Public()
   @Get('home-income/statistics')
   async getHomeIncomeStatistics(@Query() query: ExpenseQueryDto) {
     return this.financeService.getStatistics(query, ExpenseType.HOME_INCOME);
@@ -145,6 +153,7 @@ export class FinanceController {
    * GET /api/finance/home-income/categories
    * Get home income categories
    */
+  @Public()
   @Get('home-income/categories')
   async getHomeIncomeCategories() {
     return this.financeService.getCategories(ExpenseType.HOME_INCOME);
@@ -183,6 +192,7 @@ export class FinanceController {
    * GET /api/finance/:id
    * Get expense by ID
    */
+  @Public()
   @Get(':id')
   async getExpenseById(@Param('id', ParseIntPipe) id: number) {
     return this.financeService.findById(id);
@@ -192,6 +202,7 @@ export class FinanceController {
    * PUT /api/finance/:id
    * Update an expense
    */
+  @Public()
   @Put(':id')
   async updateExpense(
     @Param('id', ParseIntPipe) id: number,
@@ -204,6 +215,7 @@ export class FinanceController {
    * DELETE /api/finance/:id
    * Delete an expense
    */
+  @Public()
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async deleteExpense(@Param('id', ParseIntPipe) id: number) {

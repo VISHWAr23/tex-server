@@ -96,3 +96,21 @@ export class ExportQueryDto {
   @IsString()
   description?: string;
 }
+
+/**
+ * DTO for creating a company
+ */
+export class CreateCompanyDto {
+  @IsString()
+  @MinLength(1, { message: 'Company name is required' })
+  name: string;
+}
+
+/**
+ * DTO for updating a company
+ */
+export class UpdateCompanyDto {
+  @IsString()
+  @MinLength(1, { message: 'Company name is required' })
+  name: string;
+}

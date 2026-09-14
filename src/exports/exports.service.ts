@@ -4,7 +4,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateExportDto, UpdateExportDto, ExportQueryDto } from './dto/export.dto';
+import {
+  CreateExportDto,
+  UpdateExportDto,
+  ExportQueryDto,
+  CreateCompanyDto,
+  UpdateCompanyDto,
+} from './dto/export.dto';
 
 /**
  * Exports Service
@@ -33,6 +39,121 @@ export class ExportsService {
     return this.prisma.company.create({
       data: { name },
     });
+  }
+
+  /**
+   * Create a new company
+   */
+  async createCompany(dto: CreateCompanyDto) {
+    const trimmedName = dto.name.trim();
+    if (!trimmedName) {
+      throw new BadRequestException('Company name cannot be empty');
+    }
+
+    const existing = await this.prisma.company.findFirst({
+      where: {
+        name: {
+          equals: trimmedName,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existing) {
+      throw new BadRequestException(`Company "${trimmedName}" already exists`);
+    }
+
+    const company = await this.prisma.company.create({
+      data: { name: trimmedName },
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: { exports: true },
+        },
+      },
+    });
+
+    return company;
+  }
+
+  /**
+   * Update an existing company
+   */
+  async updateCompany(id: number, dto: UpdateCompanyDto) {
+    const trimmedName = dto.name.trim();
+    if (!trimmedName) {
+      throw new BadRequestException('Company name cannot be empty');
+    }
+
+    const company = await this.prisma.company.findUnique({
+      where: { id },
+    });
+
+    if (!company) {
+      throw new NotFoundException(`Company with ID ${id} not found`);
+    }
+
+    const existingWithName = await this.prisma.company.findFirst({
+      where: {
+        name: {
+          equals: trimmedName,
+          mode: 'insensitive',
+        },
+        id: { not: id },
+      },
+    });
+
+    if (existingWithName) {
+      throw new BadRequestException(`Another company named "${trimmedName}" already exists`);
+    }
+
+    const updated = await this.prisma.company.update({
+      where: { id },
+      data: { name: trimmedName },
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: { exports: true },
+        },
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Delete a company
+   */
+  async deleteCompany(id: number) {
+    const company = await this.prisma.company.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { exports: true },
+        },
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException(`Company with ID ${id} not found`);
+    }
+
+    if (company._count.exports > 0) {
+      throw new BadRequestException(
+        `Cannot delete company "${company.name}" because it is associated with ${company._count.exports} export record(s).`
+      );
+    }
+
+    await this.prisma.company.delete({
+      where: { id },
+    });
+
+    return {
+      message: `Company "${company.name}" deleted successfully`,
+      id,
+    };
   }
 
   /**

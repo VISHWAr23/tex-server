@@ -27,8 +27,7 @@ export class WorkService {
    * Sorted alphabetically for easy selection
    */
   async getAllDescriptions() {
-    return this.prisma.workDescription.findMany({
-      orderBy: { text: 'asc' },
+    const descriptions = await this.prisma.workDescription.findMany({
       select: {
         id: true,
         text: true,
@@ -36,8 +35,27 @@ export class WorkService {
         _count: {
           select: { works: true },
         },
+        works: {
+          orderBy: { date: 'desc' },
+          take: 1,
+          select: { date: true },
+        },
       },
     });
+
+    return descriptions
+      .sort((a, b) => {
+        const aDate = a.works[0]?.date ? new Date(a.works[0].date).getTime() : 0;
+        const bDate = b.works[0]?.date ? new Date(b.works[0].date).getTime() : 0;
+        if (aDate === bDate) {
+          return a.text.localeCompare(b.text);
+        }
+        return bDate - aDate;
+      })
+      .map((d) => {
+        const { works, ...rest } = d;
+        return rest;
+      });
   }
 
   /**
