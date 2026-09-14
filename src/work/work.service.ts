@@ -374,8 +374,8 @@ export class WorkService {
     }
 
     // Handle description update
-    let descriptionId = dto.descriptionId;
-    if (!descriptionId && dto.description) {
+    let descriptionId = dto.descriptionId || work.descriptionId;
+    if (!dto.descriptionId && dto.description) {
       const description = await this.getOrCreateDescription(dto.description);
       descriptionId = description.id;
     }
@@ -386,10 +386,10 @@ export class WorkService {
     const totalAmount = quantity * pricePerUnit;
 
     // Update description price if requested
-    if (dto.updateDescriptionPrice && descriptionId && dto.pricePerUnit) {
+    if (dto.updateDescriptionPrice && descriptionId && (dto.pricePerUnit !== undefined || work.pricePerUnit)) {
       await this.prisma.workDescription.update({
         where: { id: descriptionId },
-        data: { pricePerUnit: dto.pricePerUnit },
+        data: { pricePerUnit: dto.pricePerUnit ?? work.pricePerUnit },
       });
     }
 

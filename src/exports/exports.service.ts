@@ -384,17 +384,18 @@ export class ExportsService {
     }
 
     // Handle description
+    let descriptionId = existing.descriptionId;
     if (dto.description || dto.descriptionId) {
-      const descriptionId = await this.getOrCreateDescription(dto.description, dto.descriptionId);
+      descriptionId = await this.getOrCreateDescription(dto.description, dto.descriptionId);
       data.descriptionId = descriptionId;
+    }
 
-      // Update description price if requested
-      if (dto.updateDescriptionPrice && dto.pricePerUnit) {
-        await this.prisma.workDescription.update({
-          where: { id: descriptionId },
-          data: { pricePerUnit: dto.pricePerUnit },
-        });
-      }
+    // Update description price if requested
+    if (dto.updateDescriptionPrice && descriptionId && (dto.pricePerUnit !== undefined || existing.pricePerUnit)) {
+      await this.prisma.workDescription.update({
+        where: { id: descriptionId },
+        data: { pricePerUnit: dto.pricePerUnit ?? existing.pricePerUnit },
+      });
     }
 
     // Recalculate total if quantity or price changed
